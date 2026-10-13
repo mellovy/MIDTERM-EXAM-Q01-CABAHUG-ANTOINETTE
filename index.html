@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clinic Queue System</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Clinic Queue System</h1>
+      <p id="message" class="message" role="status"></p>
+
+      <section>
+        <h2>Add Patient</h2>
+        <form id="add-form">
+          <input id="patient_name" type="text" placeholder="Patient Name" required />
+          <input id="service" type="text" placeholder="Service" required />
+          <input id="priority" type="number" placeholder="Priority" required />
+          <button type="submit">Add</button>
+        </form>
+      </section>
+
+      <section>
+        <h2>Search Patient</h2>
+        <form id="search-form">
+          <input id="search-id" type="number" placeholder="Enter patient ID" min="1" required />
+          <button type="submit">Search</button>
+          <button type="button" id="show-all">Show All</button>
+        </form>
+      </section>
+
+      <section>
+        <h2>Queue</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Service</th>
+              <th>Priority</th>
+              <th>Queue #</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="records"></tbody>
+        </table>
+      </section>
+    </main>
+
+    <script>
+      const API = '/api/patients';
+      const tbody = document.getElementById('records');
+
+      function showMessage(text, isError = false) {
+        const messageEl = document.getElementById('message');
+        messageEl.textContent = text;
+        messageEl.className = `message ${isError ? 'error' : 'ok'}`;
+      }
+
+      function render(records) {
+        tbody.innerHTML = records.length
+          ? records.map((patient) => `
+              <tr>
+                <td>${patient.id}</td><td>${patient.patient_name}</td>
+                <td>${patient.service}</td><td>${patient.priority}</td>
+                <td>${patient.queue_number}</td>
+                <td><button type="button" data-id="${patient.id}">Delete</button></td>
+              </tr>`).join('')
+          : '<tr><td colspan="6">No patients yet.</td></tr>';
+      }
+
+      async function request(url, options = {}) {
+        const response = await fetch(url, options);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+        return data;
+      }
+
+      document.getElementById('add-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const payload = {
+          patient_name: document.getElementById('patient_name').value,
+          service: document.getElementById('service').value,
+          priority: Number(document.getElementById('priority').value)
+        };
+
+        try {
+          const patient = await request(API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          event.target.reset();
+          showMessage(`Added ${patient.patient_name} - Queue #${patient.queue_number}`);
+          render(await request(API));
+        } catch (error) {
+          showMessage(error.message, true);
+        }
+      });
+
+      document.getElementById('search-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const id = document.getElementById('search-id').value;
+        try {
+          render([await request(`${API}/${id}`)]);
+          showMessage(`Found patient ${id}`);
+        } catch (error) {
+          showMessage(error.message, true);
+        }
+      });
+
+      tbody.addEventListener('click', async (event) => {
+        if (event.target.tagName !== 'BUTTON') return;
+        const id = event.target.dataset.id;
+        try {
+          await request(`${API}/${id}`, { method: 'DELETE' });
+          showMessage(`Deleted ${id}`);
+          render(await request(API));
+        } catch (error) {
+          showMessage(error.message, true);
+        }
+      });
+
+      document.getElementById('show-all').addEventListener('click', () => {
+        document.getElementById('search-id').value = '';
+        showMessage('');
+        request(API).then(render).catch((error) => showMessage(error.message, true));
+      });
+
+      request(API).then(render).catch((error) => showMessage(error.message, true));
+    </script>
+  </body>
+</html>

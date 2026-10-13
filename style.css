@@ -1,0 +1,59 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+main {
+  max-width: 1000px;
+  width: 100%;
+}
+
+section {
+  margin-top: 16px;
+}
+
+form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+input,
+button {
+  font: inherit;
+  padding: 6px 8px;
+}
+
+button {
+  cursor: pointer;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th,
+td {
+  border: 1px solid #666;
+  padding: 7px;
+  text-align: left;
+}
+
+.message {
+  min-height: 1.2em;
+  margin: 10px 0;
+}
+
+.message.ok {
+  color: #006600;
+}
+
+.message.error {
+  color: #990000;
+}
+

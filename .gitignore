@@ -1,0 +1,8 @@
+# Ignore everything in the project root by default
+*
+
+# Keep this file and the requested app files visible to Git
+!.gitignore
+!index.html
+!style.css
+!server.js
